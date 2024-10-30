@@ -1,24 +1,16 @@
 import pandas as pd
-import gdown
 
-# ID del archivo en Google Drive
-file_id = '1erhDU8JPVFtFb7aFA2mA5oul8LM4Xov8'  # ID del archivo en tu URL
+# URL del archivo CSV en Dropbox (modificada para descarga)
+url_procesos = 'https://www.dropbox.com/scl/fi/z3fojduofa0bztpcf9y77/Conteo_de_Procesos_V2_20241030.csv?rlkey=2plq8ayvm7ejnbz72n4qyppbf&dl=1'
+url_indiciados = 'https://www.dropbox.com/scl/fi/wrpdzgn1ewdarnuy4xrxu/Conteo_de_Indiciados_V2_20241030.csv?rlkey=0m0z9udx0if0a9pr0ojrur5gf&dl=1'
 
-# Crear la URL de descarga
-url = f"https://drive.google.com/uc?id={file_id}"
+# Cargar los archivos CSV directamente desde la URL
+datos5 = pd.read_csv(url_procesos, delimiter=',', on_bad_lines='skip', encoding='utf-8')
+datos6 = pd.read_csv(url_indiciados, delimiter=',', on_bad_lines='skip', encoding='utf-8')
 
-# Descargar el archivo
-gdown.download(url, 'archivo.csv', quiet=False)
+# Imprimir las columnas del DataFrame
+print("Columnas de datos5:")
+print(datos5.columns)
 
-# Leer el archivo descargado en un DataFrame
-datos5 = pd.read_csv('archivo.csv', encoding="utf-8")
-
-# Filtrar los datos donde CRIMINALIDAD es "SI" y GRUPO_DELITO es "DELITOS SEXUALES"
-datos_filtrados = datos5[(datos5['CRIMINALIDAD'] == "SI") & (datos5['GRUPO_DELITO'] == "DELITOS SEXUALES")]
-
-# Mostrar los datos filtrados
-print(datos_filtrados)
-
-# Seleccionar solo la columna "DELITO"
-filtrado_delitos = datos_filtrados[['DELITO']]
-print(filtrado_delitos)
+print("\nColumnas de datos6:")
+print(datos6.columns)
