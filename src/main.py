@@ -1,6 +1,6 @@
 from dotenv import load_dotenv
 from data_loader import load_data, upload_data_to_mongo
-from data_preparation import clean_and_prepare_data, explore_data, agregar_region
+from data_preparation import clean_and_prepare_data, explore_data, agregar_region, eliminar_columnas,combinar_columnas
 
 
 from tabulate import tabulate
@@ -19,32 +19,26 @@ def main():
     # Cargar datos
     df = load_data(csv_path)
 
-    # Ver valores únicos de una columna específica
-    #columna = 'AÑO_DENUNCIA'
-    #valores_unicos = df[columna].unique()
-    #print(f"Valores únicos en la columna '{columna}':\n{valores_unicos}")
-
     if df is not None:
-
-        # Exploración inicial de los datos
-        #explore_data(df)
-
         # Limpieza y transformación de los datos
         df = clean_and_prepare_data(df)
-
-        # Agregar la columna REGIÓN
-        #df = agregar_region(df)
-
-        # Exploración despúes de la limpieza de los datos
-        #explore_data(df)
-
-        # Subir datos limpios a MongoDB
-        #upload_data_to_mongo(df, "victimas")  # Nombre de la colección en MongoDB
-
+        
+        # Columnas a eliminar
+        columnas_a_eliminar = ['CRIMINALIDAD', 'ES_ARCHIVO',"ES_PRECLUSIÓN","LEY","SECCIONAL","AÑO_ENTRADA","VICTIMA_CONSUMADO"]
+        
+        # Eliminar columnas
+        df = eliminar_columnas(df, columnas_a_eliminar)
+        
+        # Crear nueva columna de ubicación
+        df = combinar_columnas(df, 'DEPARTAMENTO_HECHO', 'PAÍS_HECHO', 'Ubicación')
+        
+        # Exportar el DataFrame limpio a un nuevo archivo CSV
+        output_csv_path = "data/victimas_sexuales_limpio.csv"
+        df.to_csv(output_csv_path, index=False)
+        print(f"Datos exportados a: {output_csv_path}")
 
 if __name__ == "__main__":
     main()
-
 
 
 

@@ -1,4 +1,5 @@
 import pandas as pd
+from tabulate import tabulate
 
 def clean_and_prepare_data(df):
     """
@@ -104,3 +105,34 @@ def agregar_region(df):
     except Exception as e:
         print(f"Error al agregar la columna REGIÓN: {e}")
         return df
+
+
+
+def eliminar_columnas(df, columnas_a_eliminar):
+    # Verificar que las columnas a eliminar existen en el DataFrame
+    columnas_existentes = [col for col in columnas_a_eliminar if col in df.columns]
+    
+    # Eliminar las columnas
+    df_clean = df.drop(columns=columnas_existentes)
+    
+    # Obtener los nombres de las columnas restantes
+    nombres_columnas_restantes = df_clean.columns.tolist()
+    
+    # Imprimir los nombres de las columnas restantes en forma de tabla
+    print("Nombres de las columnas restantes:")
+    print(tabulate([[col] for col in nombres_columnas_restantes], headers=["Columnas"], tablefmt="grid"))
+    
+    return df_clean  # Asegúrate de devolver el nuevo DataFrame
+
+def combinar_columnas(df, col1, col2, nueva_columna):
+    # Crear una copia del DataFrame para evitar modificaciones inesperadas
+    df_combined = df.copy()
+    
+    # Combinar las dos columnas
+    df_combined[nueva_columna] = df_combined[col1] + ', ' + df_combined[col2]
+    
+    # Imprimir la nueva columna creada
+    print(f"Nueva columna '{nueva_columna}':")
+    print(df_combined[nueva_columna].head())
+    
+    return df_combined  # Devolver el nuevo DataFrame
