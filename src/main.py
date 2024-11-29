@@ -1,6 +1,6 @@
 from dotenv import load_dotenv
 from data_loader import load_data, upload_data_to_mongo
-from data_preparation import clean_and_prepare_data, explore_data, agregar_region, eliminar_columnas,combinar_columnas
+from data_preparation import clean_and_prepare_data, explore_data, agregar_region, eliminar_columnas,combinar_columnas, limpiar_columna_delito
 
 
 from tabulate import tabulate
@@ -31,7 +31,7 @@ def main():
         
         # Crear nueva columna de ubicación
         df = combinar_columnas(df, 'DEPARTAMENTO_HECHO', 'PAÍS_HECHO', 'Ubicación')
-        
+        df = limpiar_columna_delito(df, columna='DELITO')
         # Exportar el DataFrame limpio a un nuevo archivo CSV
         output_csv_path = "data/victimas_sexuales_limpio.csv"
         df.to_csv(output_csv_path, index=False)

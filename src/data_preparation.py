@@ -136,3 +136,16 @@ def combinar_columnas(df, col1, col2, nueva_columna):
     print(df_combined[nueva_columna].head())
     
     return df_combined  # Devolver el nuevo DataFrame
+
+def limpiar_columna_delito(df, columna='DELITO'):
+
+    try:
+        if columna in df.columns:
+            df[columna] = df[columna].str.split('ART.').str[0].str.strip()
+            print(f"Columna '{columna}' procesada correctamente.")
+        else:
+            print(f"La columna '{columna}' no existe en el DataFrame.")
+        return df
+    except Exception as e:
+        print(f"Error al procesar la columna '{columna}': {e}")
+        return df
