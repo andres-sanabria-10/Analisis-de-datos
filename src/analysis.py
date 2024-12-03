@@ -158,11 +158,11 @@ def hipotesis_3():
     
     # Crear una categoría binaria de resolución basada en ETAPA_CASO
     df['caso_resuelto'] = df['ETAPA_CASO'].apply(
-        lambda x: 'Resuelto' if x in ['EJECUCIÓN DE PENAS', 'JUICIO'] else 'No Resuelto'
+        lambda x: 'Resuelto' if x in ['Ejecución De Penas', 'Juicio'] else 'No Resuelto'
     )
     
     # Crear una columna binaria para país de nacimiento (Colombia vs. Otros)
-    df['pais_nacimiento_colombiano'] = (df['PAÍS_NACIMIENTO'] == 'Colombia').astype(int)
+    df['pais_nacimiento_colombiano'] = (df['PAÍS_NACIMIENTO_VICTIMA'] == 'Colombia').astype(int)
     
     # Filtrar datos para Colombia y otros países
     colombia_df = df[df['pais_nacimiento_colombiano'] == 1]
@@ -287,15 +287,15 @@ def hipotesis_4():
 
     # Filtrar los grupos etarios de interés
     grupos_interes = [
-        "Niño, Niña. Población de 0 a 13 años.",
-        "Adolescente de 14 a 17 años."
+        "Niño, Niña. Población De 0 A 13 Años.",
+        "Adolescente De 14 A 17 Años."
     ]
     df_grupos = df[df['GRUPO_ETARIO'].isin(grupos_interes)]
 
     # Sumar el total de víctimas por grupo etario
     victimas_por_grupo = df_grupos.groupby('GRUPO_ETARIO')['TOTAL_VÍCTIMAS'].sum()
-    total_0_13 = victimas_por_grupo["Niño, Niña. Población de 0 a 13 años."]
-    total_14_17 = victimas_por_grupo["Adolescente de 14 a 17 años."]
+    total_0_13 = victimas_por_grupo["Niño, Niña. Población De 0 A 13 Años."]
+    total_14_17 = victimas_por_grupo["Adolescente De 14 A 17 Años."]
     total_victimas = victimas_por_grupo.sum()
 
     # Calcular proporciones
@@ -359,7 +359,7 @@ def hipotesis_4():
     # Crear gráfico de barras con etiquetas de conteo en la parte superior
     plt.figure(figsize=(10, 6))
     totales = [total_14_17, total_0_13]  # Usamos los totales de cada grupo
-    etiquetas_barras = ["Adolescente de 14 a 17 años.", "Niño, Niña. Población de 0 a 13 años."]
+    etiquetas_barras = ["Adolescente De 14 A 17 Años.", "Niño, Niña. Población De 0 A 13 Años."]
 
     # Colores personalizados
     colores = ["#4A90E2", "#1F4788"]
@@ -400,7 +400,7 @@ def main():
     Función principal para ejecutar el análisis.
     """
     print("Iniciando análisis para la hipótesis 1...")
-    hipotesis_4()
+    hipotesis_3()
 
 if __name__ == "__main__":
     main()
