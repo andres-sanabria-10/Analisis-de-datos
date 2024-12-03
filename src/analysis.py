@@ -6,6 +6,7 @@ from data_loader import load_data
 from scipy.stats import chi2_contingency
 import numpy as np
 from scipy.stats import norm
+from scipy import stats
 
 
 # Ruta del CSV limpio
@@ -391,8 +392,282 @@ def hipotesis_4():
     print(f"Gráfico de barras actualizado guardado en: {barras_path}")
 
     plt.show()
+    
+    #hipotesis 5
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import os
+from scipy.stats import norm
+
+def hipotesis_5():
+    """
+    Prueba Z para validar la hipótesis 5:
+    El 70% de las víctimas hacen parte de la comunidad LGTBI en comparación
+    a las otras comunidades ("INDÍGENAS", "AFRODESCENDIENTE", "APLICA_NNA") para el año de denuncia 2024.
+    """
+    # Cargar los datos limpios
+    df = load_data(CLEAN_CSV_PATH)
+    
+    # Verificar si las columnas necesarias existen
+    if 'APLICA_LGBTI' not in df.columns or 'TOTAL_VÍCTIMAS' not in df.columns or 'AÑO_DENUNCIA' not in df.columns:
+        print("Las columnas necesarias ('APLICA_LGBTI', 'TOTAL_VÍCTIMAS', 'AÑO_DENUNCIA') no están disponibles en los datos.")
+        return
+    
+    # Asegurar que TOTAL_VÍCTIMAS sea numérica
+    df['TOTAL_VÍCTIMAS'] = pd.to_numeric(df['TOTAL_VÍCTIMAS'], errors='coerce').fillna(0)
+    
+    # Filtrar datos para 2024
+    df_2024 = df[df['AÑO_DENUNCIA'] == 2024]
+    
+    # Filtrar víctimas de la comunidad LGTBI
+    total_lgtbi = df_2024[df_2024['APLICA_LGBTI'] == 'LGTBI']['TOTAL_VÍCTIMAS'].sum()
+    
+    # Filtrar víctimas de las otras comunidades: "INDÍGENAS", "AFRODESCENDIENTE", "APLICA_NNA"
+    otras_comunidades = df_2024[df_2024['APLICA_LGBTI'].isin(['INDÍGENAS', 'AFRODESCENDIENTE', 'APLICA_NNA'])]
+    total_otras_comunidades = otras_comunidades['TOTAL_VÍCTIMAS'].sum()
+    
+    # Calcular el total de víctimas
+    total_victimas = total_lgtbi + total_otras_comunidades
+    
+    # Calcular proporción observada de víctimas LGTBI
+    p_observada = total_lgtbi / total_victimas
+    p_esperada = 0.70  # Proporción esperada según la hipótesis
+    
+    # Calcular error estándar
+    se = np.sqrt((p_esperada * (1 - p_esperada)) / total_victimas)
+    
+    # Calcular estadístico Z
+    z = (p_observada - p_esperada) / se
+    
+    # Calcular valor p (prueba de dos colas)
+    p_value = 2 * (1 - norm.cdf(abs(z)))
+    
+    # Mostrar resultados
+    print("\nResultados de la Prueba Z para la Hipótesis 5:")
+    print(f"Proporción observada LGTBI: {p_observada:.4f}")
+    print(f"Proporción esperada: {p_esperada:.4f}")
+    print(f"Estadístico Z: {z:.4f}")
+    print(f"Valor p: {p_value:.4f}")
+    
+    if p_value < 0.05:
+        print("Rechazamos la hipótesis nula: La proporción es significativamente diferente del 70%")
+    else:
+        print("No podemos rechazar la hipótesis nula: No hay evidencia suficiente para decir que la proporción es diferente del 70%")
+    
+    # Crear gráfico de torta
+    proporciones = [p_observada * 100, (1 - p_observada) * 100]
+    etiquetas = ["Comunidad LGTBI", "Otras comunidades"]
+    
+    plt.figure(figsize=(8, 8))
+    wedges, texts, autotexts = plt.pie(
+        proporciones,
+        labels=etiquetas,
+        autopct='%1.1f%%',
+        colors=["#1F4788", "#4A90E2"],
+        startangle=90,
+        wedgeprops={'edgecolor': 'black', 'linewidth': 1.5}
+    )
+    for autotext in autotexts:
+        autotext.set_fontweight('bold')
+        autotext.set_fontsize(12)
+    
+    plt.title("Proporción de Víctimas por Comunidad (2024)", fontsize=16, fontweight='bold')
+    plt.axis('equal')
+    plt.tight_layout()
+    
+    # Crear carpeta output si no existe
+    output_dir = "output"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    
+    # Guardar gráfico de torta
+    torta_path = os.path.join(output_dir, "hipotesis_5_torta_lgtbi.png")
+    plt.savefig(torta_path, dpi=300)
+    print(f"Gráfico de torta guardado en: {torta_path}")
+    
+    plt.show()
+    
+    # Crear gráfico de barras
+    plt.figure(figsize=(10, 6))
+    totales = [total_lgtbi, total_otras_comunidades]
+    etiquetas_barras = ["Comunidad LGTBI", "Otras comunidades"]
+    
+    # Colores personalizados
+    colores = ["#4A90E2", "#1F4788"]
+    
+    # Crear gráfico
+    barras = plt.bar(etiquetas_barras, totales, color=colores, alpha=0.9)
+    
+    # Agregar etiquetas en la parte superior de cada barra
+    for i, barra in enumerate(barras):
+        plt.text(
+            barra.get_x() + barra.get_width() / 2,
+            barra.get_height() + (max(totales) * 0.02),
+            f"{int(totales[i]):,}".replace(",", "."), ha='center', va='bottom', fontsize=12, fontweight='bold'
+        )
+    
+    # Personalizar el gráfico
+    plt.title("Total de Víctimas por Comunidad (2024)", fontsize=16, fontweight="bold")
+    plt.xlabel("Comunidad", fontsize=14)
+    plt.ylabel("Total de Víctimas", fontsize=14)
+    plt.grid(axis="y", linestyle="--", alpha=0.7)
+    plt.ylim(0, max(totales) * 1.1)
+    
+    plt.tight_layout()
+    
+    # Guardar gráfico de barras
+    barras_path = os.path.join(output_dir, "hipotesis_5_barras_lgtbi.png")
+    plt.savefig(barras_path, dpi=300)
+    print(f"Gráfico de barras guardado en: {barras_path}")
+    
+    plt.show()
 
 
+def hipotesis_5():
+    """
+    Prueba Z para validar la hipótesis 5:
+    El 70% de las víctimas hacen parte de la comunidad LGTBI en comparación
+    a las otras comunidades ("INDÍGENAS", "AFRODESCENDIENTE", "APLICA_NNA") para el año de denuncia 2024.
+    """
+    # Cargar los datos limpios
+    df = load_data(CLEAN_CSV_PATH)
+    
+    # Verificar si las columnas necesarias existen
+    if 'APLICA_LGBTI' not in df.columns or 'TOTAL_VÍCTIMAS' not in df.columns or 'AÑO_DENUNCIA' not in df.columns:
+        print("Las columnas necesarias ('APLICA_LGBTI', 'TOTAL_VÍCTIMAS', 'AÑO_DENUNCIA') no están disponibles en los datos.")
+        return
+    
+    # Asegurar que TOTAL_VÍCTIMAS sea numérica
+    df['TOTAL_VÍCTIMAS'] = pd.to_numeric(df['TOTAL_VÍCTIMAS'], errors='coerce').fillna(0)
+    
+    # Filtrar datos para 2024
+    df_2024 = df[df['AÑO_DENUNCIA'] == 2024]
+    
+    # Depuración: Verificar cuántos registros hay en 2024
+    print(f"Cantidad de registros para 2024: {len(df_2024)}")
+    
+    if len(df_2024) == 0:
+        print("No hay datos para el año 2024.")
+        return
+    
+    # Filtrar víctimas de la comunidad LGTBI (valor "Si" en APLICA_LGBTI)
+    victimas_lgtbi = df_2024[df_2024['APLICA_LGBTI'] == 'Si']
+    total_lgtbi = victimas_lgtbi['TOTAL_VÍCTIMAS'].sum()
+    
+    # Depuración: Verificar las víctimas de LGTBI
+    print(f"Total de víctimas LGTBI: {total_lgtbi}")
+    
+    if total_lgtbi == 0:
+        print("No hay víctimas LGTBI en 2024.")
+        return
+    
+    # Filtrar víctimas de las otras comunidades (filtrando por los valores específicos)
+    otras_comunidades = df_2024[df_2024['APLICA_LGBTI'].isin(['INDÍGENA', 'AFRODESCENDIENTE', 'APLICA_NNA'])]
+    total_otras_comunidades = otras_comunidades['TOTAL_VÍCTIMAS'].sum()
+    
+    # Depuración: Verificar las víctimas de otras comunidades
+    print(f"Total de víctimas en otras comunidades: {total_otras_comunidades}")
+    
+    if total_otras_comunidades == 0:
+        print("No hay víctimas en otras comunidades en 2024.")
+        return
+    
+    # Calcular el total de víctimas
+    total_victimas = total_lgtbi + total_otras_comunidades
+    
+    # Calcular proporción observada de víctimas LGTBI
+    p_observada = total_lgtbi / total_victimas
+    p_esperada = 0.70  # Proporción esperada según la hipótesis
+    
+    # Calcular error estándar
+    se = np.sqrt((p_esperada * (1 - p_esperada)) / total_victimas)
+    
+    # Calcular estadístico Z
+    z = (p_observada - p_esperada) / se
+    
+    # Calcular valor p (prueba de dos colas)
+    p_value = 2 * (1 - norm.cdf(abs(z)))
+    
+    # Mostrar resultados
+    print("\nResultados de la Prueba Z para la Hipótesis 5:")
+    print(f"Proporción observada LGTBI: {p_observada:.4f}")
+    print(f"Proporción esperada: {p_esperada:.4f}")
+    print(f"Estadístico Z: {z:.4f}")
+    print(f"Valor p: {p_value:.4f}")
+    
+    if p_value < 0.05:
+        print("Rechazamos la hipótesis nula: La proporción es significativamente diferente del 70%")
+    else:
+        print("No podemos rechazar la hipótesis nula: No hay evidencia suficiente para decir que la proporción es diferente del 70%")
+    
+    # Crear gráfico de torta
+    proporciones = [p_observada * 100, (1 - p_observada) * 100]
+    etiquetas = ["Comunidad LGTBI", "Otras comunidades"]
+    
+    plt.figure(figsize=(8, 8))
+    wedges, texts, autotexts = plt.pie(
+        proporciones,
+        labels=etiquetas,
+        autopct='%1.1f%%',
+        colors=["#1F4788", "#4A90E2"],
+        startangle=90,
+        wedgeprops={'edgecolor': 'black', 'linewidth': 1.5}
+    )
+    for autotext in autotexts:
+        autotext.set_fontweight('bold')
+        autotext.set_fontsize(12)
+    
+    plt.title("Proporción de Víctimas por Comunidad (2024)", fontsize=16, fontweight='bold')
+    plt.axis('equal')
+    plt.tight_layout()
+    
+    # Crear carpeta output si no existe
+    output_dir = "output"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    
+    # Guardar gráfico de torta
+    torta_path = os.path.join(output_dir, "hipotesis_5_torta_lgtbi.png")
+    plt.savefig(torta_path, dpi=300)
+    print(f"Gráfico de torta guardado en: {torta_path}")
+    
+    plt.show()
+    
+    # Crear gráfico de barras
+    plt.figure(figsize=(10, 6))
+    totales = [total_lgtbi, total_otras_comunidades]
+    etiquetas_barras = ["Comunidad LGTBI", "Otras comunidades"]
+    
+    # Colores personalizados
+    colores = ["#4A90E2", "#1F4788"]
+    
+    # Crear gráfico
+    barras = plt.bar(etiquetas_barras, totales, color=colores, alpha=0.9)
+    
+    # Agregar etiquetas en la parte superior de cada barra
+    for i, barra in enumerate(barras):
+        plt.text(
+            barra.get_x() + barra.get_width() / 2,
+            barra.get_height() + (max(totales) * 0.02),
+            f"{int(totales[i]):,}".replace(",", "."), ha='center', va='bottom', fontsize=12, fontweight='bold'
+        )
+    
+    # Personalizar el gráfico
+    plt.title("Total de Víctimas por Comunidad (2024)", fontsize=16, fontweight="bold")
+    plt.xlabel("Comunidad", fontsize=14)
+    plt.ylabel("Total de Víctimas", fontsize=14)
+    plt.grid(axis="y", linestyle="--", alpha=0.7)
+    plt.ylim(0, max(totales) * 1.1)
+    
+    plt.tight_layout()
+    
+    # Guardar gráfico de barras
+    barras_path = os.path.join(output_dir, "hipotesis_5_barras_lgtbi.png")
+    plt.savefig(barras_path, dpi=300)
+    print(f"Gráfico de barras guardado en: {barras_path}")
+    
+    plt.show()
 
 
 def main():
@@ -400,7 +675,7 @@ def main():
     Función principal para ejecutar el análisis.
     """
     print("Iniciando análisis para la hipótesis 1...")
-    hipotesis_3()
+    hipotesis_5()
 
 if __name__ == "__main__":
     main()
