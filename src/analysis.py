@@ -36,6 +36,8 @@ def hipotesis_1():
     # Mostrar resultados en consola
     print("\nTotal de víctimas por sexo:")
     print(total_victimas_por_sexo)
+    total_victimas_por_sexo = total_victimas_por_sexo.sort_values(ascending=False)
+
 
     # Crear la gráfica
     plt.figure(figsize=(10, 7))
@@ -675,7 +677,7 @@ def main():
     Función principal para ejecutar el análisis.
     """
     print("Iniciando análisis para la hipótesis 1...")
-    hipotesis_5()
+    hipotesis_4()
 
 if __name__ == "__main__":
     main()
