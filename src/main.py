@@ -1,6 +1,6 @@
 from dotenv import load_dotenv
 from data_loader import load_data, upload_data_to_mongo
-from data_preparation import clean_and_prepare_data, explore_data, agregar_region, eliminar_columnas,combinar_columnas, limpiar_columna_delito
+from data_preparation import clean_and_prepare_data, explore_data, eliminar_columnas,combinar_columnas, limpiar_columna_delito, cambiar_nombre_columna, eliminar_registros, reemplazar_sin_dato_sexo, reemplazar_sin_dato_pais_nacimiento, Estandarizacion_columnas
 
 
 from tabulate import tabulate
@@ -24,18 +24,26 @@ def main():
         df = clean_and_prepare_data(df)
         
         # Columnas a eliminar
-        columnas_a_eliminar = ['CRIMINALIDAD', 'ES_ARCHIVO',"ES_PRECLUSIÓN","LEY","SECCIONAL","AÑO_ENTRADA","VICTIMA_CONSUMADO"]
-        
-        # Eliminar columnas
+        columnas_a_eliminar = ['CRIMINALIDAD', 'ES_ARCHIVO',"ES_PRECLUSIÓN","LEY","SECCIONAL","AÑO_ENTRADA","VÍCTIMA_CONSUMADO"]
+        columnas_a_estandarizar = ["ESTADO", "ETAPA_CASO", "MUNICIPIO_HECHO", "DELITO", "GRUPO_DELITO", "SEXO", "APLICA_LGBTI", "INDÍGENA", "AFRODESCENDIENTE", "APLICA_NNA","PAÍS_NACIMIENTO_VICTIMA", "DEPARTAMENTO_HECHO", "GRUPO_ETARIO","UBICACIÓN" ]        # Eliminar columnas
         df = eliminar_columnas(df, columnas_a_eliminar)
         
         # Crear nueva columna de ubicación
-        df = combinar_columnas(df, 'DEPARTAMENTO_HECHO', 'PAÍS_HECHO', 'Ubicación')
+        df = combinar_columnas(df, 'DEPARTAMENTO_HECHO', 'PAÍS_HECHO', 'UBICACIÓN')
         df = limpiar_columna_delito(df, columna='DELITO')
+        df = cambiar_nombre_columna(df, 'PAÍS_NACIMIENTO', 'PAÍS_NACIMIENTO_VICTIMA')
+        df = eliminar_registros(df)
+        df = reemplazar_sin_dato_sexo(df, columna='SEXO')
+        df = reemplazar_sin_dato_pais_nacimiento(df, 'PAÍS_NACIMIENTO_VICTIMA')
+        df = Estandarizacion_columnas(df,columnas_a_estandarizar)
+
         # Exportar el DataFrame limpio a un nuevo archivo CSV
         output_csv_path = "data/victimas_sexuales_limpio.csv"
         df.to_csv(output_csv_path, index=False)
         print(f"Datos exportados a: {output_csv_path}")
+        
+      
+
 
 if __name__ == "__main__":
     main()

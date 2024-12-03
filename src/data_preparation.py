@@ -97,6 +97,93 @@ def limpiar_columna_delito(df, columna='DELITO'):
         return df
 
 
+def cambiar_nombre_columna(df, columna_antigua, columna_nueva):
+    try:
+        if columna_antigua in df.columns:
+            df = df.rename(columns={columna_antigua: columna_nueva})
+            print(f"Columna '{columna_antigua}' renombrada a '{columna_nueva}' correctamente.")
+        else:
+            print(f"La columna '{columna_antigua}' no existe en el DataFrame.")
+        return df
+    except Exception as e:
+        print(f"Error al renombrar la columna: {e}")
+        return df
+    
+    
+def eliminar_registros(df):
+   
+    try:
+        print("Eliminando registros con valores 'SIN DATO' en las columnas específicas...")
+        
+        # Condiciones para eliminar registros
+        condiciones = (
+            (df['ETAPA_CASO'] == "SIN DATO") |
+            (df['PAÍS_HECHO'] == "SIN DATO") |
+            (df['DEPARTAMENTO_HECHO'] == "SIN DATO") |
+            (df['MUNICIPIO_HECHO'] == "SIN DATO") |
+            (df['AÑO_DENUNCIA'] == "SIN DATO")
+        )
+        
+        # Contar registros antes de eliminar
+        registros_antes = len(df)
+        
+        # Filtrar registros que no cumplen las condiciones
+        df_filtrado = df[~condiciones]
+        
+        # Contar registros después de eliminar
+        registros_despues = len(df_filtrado)
+        
+        print(f"Registros eliminados: {registros_antes - registros_despues}")
+        print(f"Registros restantes: {registros_despues}")
+        
+        return df_filtrado
+    except Exception as e:
+        print(f"Error al eliminar registros: {e}")
+        return df
+
+def reemplazar_sin_dato_sexo(df, columna='SEXO'):
+
+    try:
+        print(f"Reemplazando 'SIN DATO' por 'DESCONOCIDO' en la columna '{columna}'...")
+        antes_reemplazo = df[columna].str.contains("SIN DATO").sum()      
+        df[columna] = df[columna].replace("SIN DATO", "DESCONOCIDO")
+        despues_reemplazo = df[columna].str.contains("SIN DATO").sum()
+        reemplazos_hechos = antes_reemplazo - despues_reemplazo
+        print(f"Se han reemplazado {reemplazos_hechos} valores 'SIN DATO' por 'DESCONOCIDO' en la columna '{columna}'.")
+        return df
+    except Exception as e:
+        print(f"Error al reemplazar los valores en la columna '{columna}': {e}")
+        return df
+
+def reemplazar_sin_dato_pais_nacimiento(df, columna='PAÍS_NACIMIENTO_VICTIMA'):
+    try:
+        print(f"Reemplazando 'SIN DATO' por 'DESCONOCIDO' en la columna '{columna}'...")
+        antes_reemplazo = df[columna].str.contains("SIN DATO").sum()            
+        df[columna] = df[columna].replace("SIN DATO", "DESCONOCIDO")
+        despues_reemplazo = df[columna].str.contains("SIN DATO").sum()
+        reemplazos_hechos = antes_reemplazo - despues_reemplazo
+        print(f"Se han reemplazado {reemplazos_hechos} valores 'SIN DATO' por 'DESCONOCIDO' en la columna '{columna}'.")
+        
+        return df
+    except Exception as e:
+        print(f"Error al reemplazar los valores en la columna '{columna}': {e}")
+        return df
+
+    
+def Estandarizacion_columnas(df, columnas):
+   
+    try:
+        for columna in columnas:
+            if columna in df.columns:
+                # Aplicar la transformación
+                df[columna] = df[columna].str.title()
+                print(f"Columna '{columna}' transformada correctamente.")
+            else:
+                print(f"Columna '{columna}' no encontrada en el DataFrame.")
+        return df
+    except Exception as e:
+        print(f"Error al transformar columnas: {e}")
+        return df
 
 
 
