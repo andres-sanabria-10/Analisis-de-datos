@@ -40,7 +40,7 @@ def hipotesis_1():
 
 
     # Crear la gráfica
-    plt.figure(figsize=(10, 7))
+    plt.figure(figsize=(10, 8))
     bars = sns.barplot(
         x=total_victimas_por_sexo.index,
         y=total_victimas_por_sexo.values,
@@ -443,14 +443,7 @@ def hipotesis_5():
     z = (p_observada - p_esperada) / se
     
     # Calcular valor p (prueba de dos colas)
-    p_value = 2 * (1 - norm.cdf(abs(z)))
-    
-    # Mostrar resultados
-    print("\nResultados de la Prueba Z para la Hipótesis 5:")
-    print(f"Proporción observada LGTBI: {p_observada:.4f}")
-    print(f"Proporción esperada: {p_esperada:.4f}")
-    print(f"Estadístico Z: {z:.4f}")
-    print(f"Valor p: {p_value:.4f}")
+    p_value = 2 * (1 - norm.cdf(abs(z)))    
     
     if p_value < 0.05:
         print("Rechazamos la hipótesis nula: La proporción es significativamente diferente del 70%")
@@ -460,6 +453,13 @@ def hipotesis_5():
     # Crear gráfico de torta
     proporciones = [p_observada * 100, (1 - p_observada) * 100]
     etiquetas = ["Comunidad LGTBI", "Otras comunidades"]
+    
+     # Mostrar resultados
+    print("\nResultados de la Prueba Z para la Hipótesis 5:")
+    print(f"Proporción observada LGTBI: {p_observada:.4f}")
+    print(f"Proporción esperada: {p_esperada:.4f}")
+    print(f"Estadístico Z: {z:.4f}")
+    print(f"Valor p: {p_value:.4f}")
     
     plt.figure(figsize=(8, 8))
     wedges, texts, autotexts = plt.pie(
@@ -545,10 +545,7 @@ def hipotesis_5():
     
     # Filtrar datos para 2024
     df_2024 = df[df['AÑO_DENUNCIA'] == 2024]
-    
-    # Depuración: Verificar cuántos registros hay en 2024
-    print(f"Cantidad de registros para 2024: {len(df_2024)}")
-    
+      
     if len(df_2024) == 0:
         print("No hay datos para el año 2024.")
         return
@@ -557,19 +554,19 @@ def hipotesis_5():
     victimas_lgtbi = df_2024[df_2024['APLICA_LGBTI'] == 'Si']
     total_lgtbi = victimas_lgtbi['TOTAL_VÍCTIMAS'].sum()
     
-    # Depuración: Verificar las víctimas de LGTBI
-    print(f"Total de víctimas LGTBI: {total_lgtbi}")
     
     if total_lgtbi == 0:
         print("No hay víctimas LGTBI en 2024.")
         return
     
     # Filtrar víctimas de las otras comunidades (filtrando por los valores específicos)
-    otras_comunidades = df_2024[df_2024['APLICA_LGBTI'].isin(['INDÍGENA', 'AFRODESCENDIENTE', 'APLICA_NNA'])]
-    total_otras_comunidades = otras_comunidades['TOTAL_VÍCTIMAS'].sum()
-    
-    # Depuración: Verificar las víctimas de otras comunidades
-    print(f"Total de víctimas en otras comunidades: {total_otras_comunidades}")
+    victimas_indigena = df_2024[df_2024['INDÍGENA'] == 'Si']['TOTAL_VÍCTIMAS'].sum()
+    victimas_afrodescendiente = df_2024[df_2024['AFRODESCENDIENTE'] == 'Si']['TOTAL_VÍCTIMAS'].sum()
+    victimas_aplica_nna = df_2024[df_2024['APLICA_NNA'] == 'Si']['TOTAL_VÍCTIMAS'].sum()
+
+# Sumar todas las víctimas de otras comunidades
+    total_otras_comunidades = victimas_indigena + victimas_afrodescendiente + victimas_aplica_nna
+
     
     if total_otras_comunidades == 0:
         print("No hay víctimas en otras comunidades en 2024.")
@@ -577,6 +574,9 @@ def hipotesis_5():
     
     # Calcular el total de víctimas
     total_victimas = total_lgtbi + total_otras_comunidades
+    
+    proporcion_otras_comunidades = total_otras_comunidades / total_victimas
+
     
     # Calcular proporción observada de víctimas LGTBI
     p_observada = total_lgtbi / total_victimas
@@ -594,6 +594,7 @@ def hipotesis_5():
     # Mostrar resultados
     print("\nResultados de la Prueba Z para la Hipótesis 5:")
     print(f"Proporción observada LGTBI: {p_observada:.4f}")
+    print(f"Proporción observada otras comunidades: {proporcion_otras_comunidades:.4f}")
     print(f"Proporción esperada: {p_esperada:.4f}")
     print(f"Estadístico Z: {z:.4f}")
     print(f"Valor p: {p_value:.4f}")
@@ -614,13 +615,14 @@ def hipotesis_5():
         autopct='%1.1f%%',
         colors=["#1F4788", "#4A90E2"],
         startangle=90,
-        wedgeprops={'edgecolor': 'black', 'linewidth': 1.5}
+        wedgeprops={'edgecolor': 'black', 'linewidth': 1.5},
+        radius=1.1
     )
     for autotext in autotexts:
         autotext.set_fontweight('bold')
         autotext.set_fontsize(12)
     
-    plt.title("Proporción de Víctimas por Comunidad (2024)", fontsize=16, fontweight='bold')
+    plt.title("Proporción de Víctimas por Comunidad (2024)", fontsize=16, fontweight='bold', pad=30)
     plt.axis('equal')
     plt.tight_layout()
     
@@ -670,14 +672,306 @@ def hipotesis_5():
     print(f"Gráfico de barras guardado en: {barras_path}")
     
     plt.show()
+    
+    
+    
+
+
+def hipotesis_6():
+    """
+    Prueba Chi-cuadrado para validar la hipótesis:
+    Existe una relación entre el año de denuncia (2022 y 2024) y la proporción de víctimas adultos mayores.
+    """
+    # Cargar los datos limpios
+    df = load_data(CLEAN_CSV_PATH)
+    
+    # Verificar si las columnas necesarias existen
+    if 'AÑO_DENUNCIA' not in df.columns or 'GRUPO_ETARIO' not in df.columns or 'TOTAL_VÍCTIMAS' not in df.columns:
+        print("Las columnas necesarias ('AÑO_DENUNCIA', 'GRUPO_ETARIO', 'TOTAL_VÍCTIMAS') no están disponibles en los datos.")
+        return
+    
+    # Asegurar que TOTAL_VÍCTIMAS sea numérica
+    df['TOTAL_VÍCTIMAS'] = pd.to_numeric(df['TOTAL_VÍCTIMAS'], errors='coerce').fillna(0)
+    
+    # Filtrar datos para los años relevantes y asegurarse de crear una copia
+    df_filtrado = df[df['AÑO_DENUNCIA'].isin([2022, 2024])].copy()
+    
+    if len(df_filtrado) == 0:
+        print("No hay datos para los años 2022 y 2024.")
+        return
+    
+    # Crear columna para identificar adultos mayores
+    df_filtrado['ES_ADULTO_MAYOR'] = df_filtrado['GRUPO_ETARIO'].apply(
+        lambda x: 'Sí' if 'Adulto Mayor. Personas Igual O Mayor A 60 Años.' in str(x) else 'No'
+    )
+    
+    # Agrupar datos por año y categoría (adultos mayores o no)
+    tabla_contingencia = df_filtrado.pivot_table(
+        index='AÑO_DENUNCIA',
+        columns='ES_ADULTO_MAYOR',
+        values='TOTAL_VÍCTIMAS',
+        aggfunc='sum',
+        fill_value=0
+    )
+
+    # Realizar la prueba Chi-cuadrado
+    chi2, p, dof, expected = chi2_contingency(tabla_contingencia)
+    # Mostrar resultados
+    print("\nResultados de la Prueba Chi-cuadrado:")
+    print(f"Estadístico Chi-cuadrado: {chi2:.4f}")
+    print(f"Grados de libertad: {dof}")
+    print(f"Valor p: {p:.4f}")
+    
+    if p < 0.05:
+        print("\nConclusión: Rechazamos la hipótesis nula. Existe una asociación significativa entre el año de denuncia y el grupo etario.")
+    else:
+        print("\nConclusión: No podemos rechazar la hipótesis nula. No hay evidencia suficiente para afirmar que existe una asociación significativa.")
+    
+    print("\nTabla de Contingencia:")
+    print(tabla_contingencia)
+    
+    
+  
+    
+    # Crear carpeta output si no existe
+    output_dir = "output"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    
+    # Guardar gráfico de barras apiladas
+    tabla_contingencia.plot(kind='bar', stacked=True, color=['#4A90E2', '#1F4788'], figsize=(10, 6))
+    plt.title("Distribución de Víctimas Adultos Mayores y No Adultos Mayores por Año", fontsize=16, fontweight="bold")
+    plt.xlabel("Año de Denuncia", fontsize=14)
+    plt.ylabel("Total de Víctimas", fontsize=14)
+    plt.legend(title="Es Adulto Mayor", fontsize=12)
+    plt.grid(axis="y", linestyle="--", alpha=0.7)
+    plt.tight_layout()
+    
+    # Guardar gráfico de barras apiladas
+    barras_path = os.path.join(output_dir, "hipotesis_adultos_mayores_barras.png")
+    plt.savefig(barras_path, dpi=300)
+    print(f"\nGráfico de barras guardado en: {barras_path}")
+    
+    plt.show()
+
+    # Gráfico de líneas
+    proporciones = tabla_contingencia.div(tabla_contingencia.sum(axis=1), axis=0)
+    proporciones.plot(kind='line', marker='o', color=['#4A90E2', '#1F4788'], figsize=(10, 6))
+
+    plt.title("Proporción de Víctimas Adultos Mayores y No Adultos Mayores por Año", fontsize=16, fontweight="bold")
+    plt.xlabel("Año de Denuncia", fontsize=14)
+    plt.ylabel("Proporción de Víctimas", fontsize=14)
+    plt.legend(title="Es Adulto Mayor", fontsize=12)
+    plt.grid(True, axis='y', linestyle="--", alpha=0.7)
+    plt.tight_layout()
+
+    # Guardar gráfico de líneas
+    lineas_path = os.path.join(output_dir, "hipotesis_adultos_mayores_lineas.png")
+    plt.savefig(lineas_path, dpi=300)
+    print(f"\nGráfico de líneas guardado en: {lineas_path}")
+    
+    plt.show()
+    
+    # Crear Heatmap (Mapa de Calor)
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(tabla_contingencia, annot=True, cmap="Blues", fmt='g', cbar=True, annot_kws={"size": 16}, linewidths=0.5)
+    plt.title("Mapa de Calor: Distribución de Víctimas por Año y Grupo Etario", fontsize=12, fontweight="bold")
+    plt.xlabel("Grupo Etario", fontsize=14)
+    plt.ylabel("Año de Denuncia", fontsize=14)
+    plt.tight_layout()
+    
+    # Guardar el Heatmap
+    heatmap_path = os.path.join(output_dir, "hipotesis_adultos_mayores_heatmap.png")
+    plt.savefig(heatmap_path, dpi=300)
+    print(f"\nMapa de calor guardado en: {heatmap_path}")
+    
+    plt.show()
+    
+    # Visualización de resultados: Gráficos de torta para cada año
+    output_dir = "output"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    
+    for year in tabla_contingencia.index:
+        # Extraer los valores para el gráfico de torta
+        valores = tabla_contingencia.loc[year]
+        etiquetas = ['No Adultos mayores de 60', 'Adultos Mayores de 60']
+        colores = ['#4A90E2', '#1F4788']
+        
+        # Crear el gráfico de torta
+        plt.figure(figsize=(6, 6))
+        plt.pie(valores, labels=etiquetas, autopct='%1.1f%%', colors=colores, startangle=90, wedgeprops={'edgecolor': 'black'})
+        plt.title(f"Distribución de Víctimas por Grupo Etario ({int(year)})", fontsize=12, fontweight="bold", pad=30)
+        plt.axis('equal')  # Asegura que el gráfico sea circular
+        
+        # Guardar gráfico de torta
+        torta_path = os.path.join(output_dir, f"hipotesis_adultos_mayores_torta_{int(year)}.png")
+        plt.savefig(torta_path, dpi=300)
+        print(f"\nGráfico de torta guardado en: {torta_path}")
+        plt.show()
+
+
+
+
+
+from scipy.stats import spearmanr, norm
+
+def hipotesis_7():
+    """
+    Verificar si más del 50% de los casos denunciados en 2024 alcanzan la etapa de ejecución de penas.
+    También calcula la correlación entre el año de denuncia y la etapa del caso (usando Spearman).
+    """
+    # Cargar los datos limpios
+    df = load_data(CLEAN_CSV_PATH)
+    
+    # Eliminar espacios extra en los nombres de las columnas
+    df.columns = df.columns.str.strip()
+    
+    # Verificar columnas necesarias
+    required_columns = ['AÑO_DENUNCIA', 'ETAPA_CASO', 'TOTAL_VÍCTIMAS']
+    if not all(col in df.columns for col in required_columns):
+        print("Columnas necesarias no disponibles en los datos.")
+        return
+    
+    # Asegurar que TOTAL_VICTIMAS sea numérica
+    df['TOTAL_VÍCTIMAS'] = pd.to_numeric(df['TOTAL_VÍCTIMAS'], errors='coerce').fillna(0)
+    
+    # Crear una copia explícita para 2024
+    df_2024 = df[df['AÑO_DENUNCIA'] == 2024].copy()
+    
+    if len(df_2024) == 0:
+        print("No hay datos para el año 2024.")
+        return
+    
+    # Calcular estadísticas para la prueba de hipótesis
+    casos_ejecucion = df_2024[df_2024['ETAPA_CASO'].str.contains('Ejecución', na=False)]['TOTAL_VÍCTIMAS'].sum()
+    total_casos = df_2024['TOTAL_VÍCTIMAS'].sum()
+    
+    # Cálculos estadísticos
+    p_observada = casos_ejecucion / total_casos if total_casos > 0 else 0
+    p_esperada = 0.5
+    n = total_casos
+    
+    if n > 0:
+        se = np.sqrt(p_esperada * (1 - p_esperada) / n)
+        z = (p_observada - p_esperada) / se
+        p_value = 1 - norm.cdf(z)
+        
+        # Imprimir resultados
+        print("\nResultados de la Prueba Z para la hipótesis 7:")
+        print(f"Número total de víctimas en 2024: {total_casos:,.0f}")
+        print(f"Número de casos en ejecución de penas: {casos_ejecucion:,.0f}")
+        print(f"Proporción observada: {p_observada:.4f}")
+        print(f"Estadístico Z: {z:.4f}")
+        print(f"Valor p: {p_value:.4f}")
+        
+        print("\nConclusión:", end=" ")
+        if p_value < 0.05:
+            print("Rechazamos la hipótesis nula.")
+        else:
+            print("No podemos rechazar la hipótesis nula.")
+    
+    # Codificación de etapas y correlación
+    etapas_mapping = {
+        'Indagación': 1,
+        'Juicio': 2,
+        'Ejecución De Penas': 3
+    }
+    
+    # Crear columna ETAPA_CODIFICADA de manera segura
+    df_2024['ETAPA_CODIFICADA'] = df_2024['ETAPA_CASO'].map(etapas_mapping)
+    
+    # Para la correlación, necesitamos más de un año
+    df_todos = df.copy()
+    df_todos['ETAPA_CODIFICADA'] = df_todos['ETAPA_CASO'].map(etapas_mapping)
+    
+    # Calcular correlación solo si hay suficiente variabilidad
+    df_corr = df_todos.dropna(subset=['AÑO_DENUNCIA', 'ETAPA_CODIFICADA'])
+    
+    plt.figure(figsize=(15, 6))
+    
+    # Gráfico de Torta (izquierda)
+    plt.subplot(1, 2, 1)
+    etapas_counts = df_2024.groupby('ETAPA_CASO')['TOTAL_VÍCTIMAS'].sum()
+    
+    colores = ['#1F4788', '#4A90E2', '#2E6BAA']  # Azul oscuro, claro y medio
+    
+    plt.pie(etapas_counts, 
+            labels=etapas_counts.index,
+            colors=colores,
+            autopct='%1.1f%%',
+            startangle=90,
+            textprops={'fontsize': 7})
+    
+    plt.title('Distribución de Etapas de Casos (2024)', 
+             fontsize=12, 
+             fontweight='bold',
+             pad=20)
+    
+    # Gráfico de Líneas (derecha)
+    plt.subplot(1, 2, 2)
+    tendencia_anual = df_todos.groupby(['AÑO_DENUNCIA', 'ETAPA_CASO'])['TOTAL_VÍCTIMAS'].sum().unstack()
+    
+    for columna, color in zip(tendencia_anual.columns, colores):
+        plt.plot(tendencia_anual.index, 
+                tendencia_anual[columna], 
+                marker='o',
+                color=color,
+                label=columna,
+                linewidth=2)
+    
+    plt.title('Evolución de Etapas por Año', 
+             fontsize=12, 
+             fontweight='bold',
+             pad=20)
+    
+    plt.xlabel('Año de Denuncia', fontsize=10)
+    plt.ylabel('Total de Víctimas', fontsize=10)
+    plt.grid(True, linestyle='--', alpha=0.7)
+    
+    # Ajustar leyenda
+    plt.legend(title='Etapa del Caso', 
+              bbox_to_anchor=(1.05, 1),
+              loc='upper left',
+              fontsize=8,
+              title_fontsize=9)
+    
+    # Rotar etiquetas del eje x
+    plt.xticks(rotation=45)
+    
+    # Ajustar márgenes
+    plt.tight_layout()
+    
+    # Guardar gráfico
+    plt.savefig('resultados_hipotesis_7_mejorado.png', 
+                dpi=300, 
+                bbox_inches='tight')
+    
+    plt.close()
+    
+    if len(df_corr['AÑO_DENUNCIA'].unique()) > 1:
+        correlacion, p_spearman = spearmanr(df_corr['AÑO_DENUNCIA'], 
+                                          df_corr['ETAPA_CODIFICADA'])
+        
+        print("\nCorrelación de Spearman (todos los años):")
+        print(f"Coeficiente: {correlacion:.4f}")
+        print(f"Valor p: {p_spearman:.4f}")
+        
+        print("\nConclusión correlación:", end=" ")
+        if p_spearman < 0.05:
+            print("Existe correlación significativa.")
+        else:
+            print("No hay evidencia de correlación significativa.")
+    else:
+        print("\nNo hay suficiente variabilidad en los años para calcular correlación.")
 
 
 def main():
     """
     Función principal para ejecutar el análisis.
     """
-    print("Iniciando análisis para la hipótesis 1...")
-    hipotesis_4()
+   
+    hipotesis_7()
 
 if __name__ == "__main__":
     main()
